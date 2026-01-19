@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -88,10 +89,14 @@ fun HomeRoot(modifier: Modifier = Modifier) {
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
-    Text(
-        text = "He",
-        style = MaterialTheme.typography.titleLarge
-    )
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ){
+        Text(
+            text = "Home Screen"
+        )
+    }
 }
 
 
