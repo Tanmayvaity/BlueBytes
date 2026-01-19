@@ -71,7 +71,12 @@ fun NavigationRoot(
                         NavEntry(
                             key = key,
                         ) {
-                            HomeRoot()
+                            HomeRoot(
+                                onBack = {
+                                    backStack.removeLastOrNull()
+                                }
+
+                            )
                         }
                     }
 

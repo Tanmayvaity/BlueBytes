@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">BlueBytes</string>
+    <string name="bluetooth_access_denied">Bluetooth Access Required</string>
+    <string name="bluetooth_access_denied_description">To find and connect to your favorite devices, please allow access to Bluetooth in your system settings.
+        Go to Settings > Permissions > Nearby Devices > Allow
+    </string>
+    <string name="bluetooth_permission_denied_btn_text">Grant Permission</string>
+    <string name="bluetooth_permission_denied_privacy">Learn more about privacy</string>
+
+
+    <string name="bluetooth_turned_off">Bluetooth is Off</string>
+    <string name="bluetooth_turned_off_description">Bluetooth is need to find and connect to nearby devices. Please enable it</string>
+    <string name="bluetooth_turned_off_btn_text">Turn on</string>
+    <string name="bluetooth_turned_learn_more">Learn more</string>
+
+
+    <string name="bluetooth_not_supported_title">Bluetooth Not Supported</string>
+    <string name="bluetooth_not_supported_description">Your device does not support Bluetooth. Core features of this app will not work</string>
+    <string name="bluetooth_not_supported_btn_text">Close App</string>
+    <string name="bluetooth_not_supported_go_back">Go back</string>
+
+
+
+
+
+
 </resources>

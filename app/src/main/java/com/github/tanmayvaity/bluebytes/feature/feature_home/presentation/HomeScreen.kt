@@ -2,8 +2,12 @@ package com.github.tanmayvaity.bluebytes.feature.feature_home.presentation
 
 import android.Manifest
 import android.app.Activity
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -16,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -25,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.github.tanmayvaity.bluebytes.core.presentation.PermissionDeniedDialog
@@ -33,57 +39,79 @@ import com.github.tanmayvaity.bluebytes.core.presentation.PermissionScreen
 import com.github.tanmayvaity.bluebytes.util.navigateToPermissionSettings
 
 
+
+
 @Composable
-fun HomeRoot(modifier: Modifier = Modifier) {
+fun HomeRoot(
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
     val activity = context as Activity
-    var showHomeScreen by rememberSaveable() {mutableStateOf(false) }
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
 
+    var permissionStatus by rememberSaveable { mutableStateOf(BluetoothPermissionStatus.IN_PROGRESS) }
+    val isBluetoothEnabled = rememberBluetoothEnabledState()
 
-    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        permissions.map { (permission, granted) ->
-            if (!granted) {
-                // show dialog
-                
-            }
+        permissionStatus = if (permissions.values.all { it }) {
+            BluetoothPermissionStatus.GRANTED
+        } else {
+            BluetoothPermissionStatus.NOT_PERMITTED
         }
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_START) {
-        requestBluetoothPermissionLogic(
-            onGranted = {
-                showHomeScreen = true
-            },
-            onRationale = {
-                showHomeScreen = false
-            },
+        permissionStatus = resolvePermissionStatus(
             context = context,
             activity = activity,
-            bluetoothPermissionLauncher = bluetoothPermissionLauncher
+            bluetoothManager = bluetoothManager,
+            isBluetoothEnabled = isBluetoothEnabled
         )
-    }
 
-    if(Build.VERSION.SDK_INT < Build.VERSION_CODES.S){
-        showHomeScreen = true
-    }
-
-    if(showHomeScreen){
-        HomeScreen()
-    }else{
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ){
-            PermissionScreen(
-                onGrantClick = {
-                    context.navigateToPermissionSettings()
-                },
-            )
+        if (permissionStatus == BluetoothPermissionStatus.IN_PROGRESS) {
+            requestBluetoothPermissions(permissionLauncher)
         }
     }
 
+    // Update status when Bluetooth state changes
+    if (permissionStatus == BluetoothPermissionStatus.GRANTED ||
+        permissionStatus == BluetoothPermissionStatus.BLUETOOTH_DISABLED ||
+        permissionStatus == BluetoothPermissionStatus.BLUETOOTH_ENABLED
+    ) {
+        permissionStatus = if (isBluetoothEnabled) {
+            BluetoothPermissionStatus.GRANTED
+        } else {
+            BluetoothPermissionStatus.BLUETOOTH_DISABLED
+        }
+    }
+
+    PermissionScreen(
+        permissionStatus = permissionStatus,
+        onGrantClick = { context.navigateToPermissionSettings() },
+        onGoToSettings = { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) },
+        onBack = onBack
+    ) {
+        HomeScreen()
+    }
+}
+
+private fun resolvePermissionStatus(
+    context: Context,
+    activity: Activity,
+    bluetoothManager: BluetoothManager,
+    isBluetoothEnabled: Boolean
+): BluetoothPermissionStatus {
+    return when {
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S -> BluetoothPermissionStatus.GRANTED
+        !bluetoothManager.isBluetoothSupported -> BluetoothPermissionStatus.DEVICE_NOT_CAPABLE
+        hasBluetoothPermissions(context) && !isBluetoothEnabled -> BluetoothPermissionStatus.BLUETOOTH_DISABLED
+        hasBluetoothPermissions(context) -> BluetoothPermissionStatus.GRANTED
+        shouldShowBluetoothRationale(activity) -> BluetoothPermissionStatus.NOT_PERMITTED
+        else -> BluetoothPermissionStatus.IN_PROGRESS
+    }
 }
 
 
@@ -92,65 +120,13 @@ fun HomeScreen(modifier: Modifier = Modifier) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
-    ){
+    ) {
         Text(
             text = "Home Screen"
         )
     }
 }
 
-
-
-fun requestBluetoothPermissionLogic(
-    onGranted : () -> Unit = {},
-    onRationale : () -> Unit = {},
-    context : Context,
-    activity : Activity,
-    bluetoothPermissionLauncher : ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>
-){
-    when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.BLUETOOTH_SCAN
-        ) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.BLUETOOTH_ADVERTISE
-                ) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                ) == PackageManager.PERMISSION_GRANTED
-
-            -> {
-            onGranted()
-        }
-
-        activity.shouldShowRequestPermissionRationale(
-            Manifest.permission.BLUETOOTH_SCAN
-        )  || activity.shouldShowRequestPermissionRationale(
-            Manifest.permission.BLUETOOTH_ADVERTISE
-        ) || activity.shouldShowRequestPermissionRationale(
-            Manifest.permission.BLUETOOTH_CONNECT
-        ) -> {
-            // should show rationale
-            onRationale()
-        }
-
-        else -> {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
-                bluetoothPermissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.BLUETOOTH_SCAN,
-                        Manifest.permission.BLUETOOTH_ADVERTISE,
-                        Manifest.permission.BLUETOOTH_CONNECT
-                    )
-                )
-            }
-        }
-
-    }
-}
 
 
 
