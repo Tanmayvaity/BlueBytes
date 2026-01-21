@@ -18,10 +18,15 @@
     <string name="bluetooth_not_supported_description">Your device does not support Bluetooth. Core features of this app will not work</string>
     <string name="bluetooth_not_supported_btn_text">Close App</string>
     <string name="bluetooth_not_supported_go_back">Go back</string>
-
-
-
-
+    <string name="known_devices">Known Devices</string>
+    <string name="unknown_device">Unknown Device</string>
+    <string name="unknown_devices">UnKnown Devices</string>
+    <string name="search_icon">Search Icon</string>
+    <string name="start_scanning">Start Scanning</string>
+    <string name="scanning_not_started">Start scanning to find nearby devices</string>
+    <string name="scanning">Scanning</string>
+    <string name="scanning_has_stopped">Scanning has stopped</string>
+    <string name="connect">Connect</string>
 
 
 </resources>

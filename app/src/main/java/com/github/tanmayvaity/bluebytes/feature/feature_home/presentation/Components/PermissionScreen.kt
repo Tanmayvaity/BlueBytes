@@ -1,12 +1,10 @@
-package com.github.tanmayvaity.bluebytes.core.presentation
+package com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,27 +13,23 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,92 +51,99 @@ fun PermissionScreen(
     permissionStatus: BluetoothPermissionStatus,
     content: @Composable () -> Unit = {}
 ) {
-    Scaffold{ padding ->
-        // Main Content Card
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .consumeWindowInsets(padding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+    // Main Content Card
+
+    var showHome by rememberSaveable {mutableStateOf(false) }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(48.dp))
+        // Icon Background Circle
+        if (permissionStatus != BluetoothPermissionStatus.GRANTED
+            && permissionStatus != BluetoothPermissionStatus.IN_PROGRESS
+            && permissionStatus != BluetoothPermissionStatus.BLUETOOTH_ENABLED
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
-            // Icon Background Circle
-            if (permissionStatus != BluetoothPermissionStatus.GRANTED
-                && permissionStatus != BluetoothPermissionStatus.IN_PROGRESS
-                && permissionStatus != BluetoothPermissionStatus.BLUETOOTH_ENABLED
+            Surface(
+                modifier = Modifier.size(100.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.secondaryContainer
             ) {
-                Surface(
-                    modifier = Modifier.size(100.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_bluetooth_permission_denied),
-                            contentDescription = null,
-                            modifier = Modifier.size(40.dp),
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_bluetooth_permission_denied),
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(64.dp))
-            AnimatedContent(
-                targetState = permissionStatus
-            ) { permissionStatus ->
-                when (permissionStatus) {
-                    BluetoothPermissionStatus.NOT_PERMITTED -> {
-                        PermissionCard(
-                            title = stringResource(R.string.bluetooth_access_denied),
-                            description = stringResource(R.string.bluetooth_access_denied_description),
-                            buttonText = stringResource(R.string.bluetooth_permission_denied_btn_text),
-                            onButtonClick = onGrantClick,
-                            showPrimaryButton = true,
-                            secondaryText = stringResource(R.string.bluetooth_permission_denied_privacy),
-                            onSecondaryClick = {}
-                        )
-                    }
+        }
+        Spacer(modifier = Modifier.height(64.dp))
+        AnimatedContent(
+            targetState = permissionStatus
+        ) { permissionStatus ->
+            when (permissionStatus) {
+                BluetoothPermissionStatus.NOT_PERMITTED -> {
+                    showHome = false
+                    PermissionCard(
+                        title = stringResource(R.string.bluetooth_access_denied),
+                        description = stringResource(R.string.bluetooth_access_denied_description),
+                        buttonText = stringResource(R.string.bluetooth_permission_denied_btn_text),
+                        onButtonClick = onGrantClick,
+                        showPrimaryButton = true,
+                        secondaryText = stringResource(R.string.bluetooth_permission_denied_privacy),
+                        onSecondaryClick = {}
+                    )
+                }
 
-                    BluetoothPermissionStatus.BLUETOOTH_DISABLED -> {
-                        PermissionCard(
-                            title = stringResource(R.string.bluetooth_turned_off),
-                            description = stringResource(R.string.bluetooth_turned_off_description),
-                            buttonText = stringResource(R.string.bluetooth_turned_off_btn_text),
-                            onButtonClick = onGoToSettings,
-                            showPrimaryButton = true,
-                            secondaryText = stringResource(R.string.bluetooth_turned_learn_more),
-                            onSecondaryClick = {}
-                        )
-                    }
+                BluetoothPermissionStatus.BLUETOOTH_DISABLED -> {
+                    showHome = false
+                    PermissionCard(
+                        title = stringResource(R.string.bluetooth_turned_off),
+                        description = stringResource(R.string.bluetooth_turned_off_description),
+                        buttonText = stringResource(R.string.bluetooth_turned_off_btn_text),
+                        onButtonClick = onGoToSettings,
+                        showPrimaryButton = true,
+                        secondaryText = stringResource(R.string.bluetooth_turned_learn_more),
+                        onSecondaryClick = {}
+                    )
+                }
 
-                    BluetoothPermissionStatus.DEVICE_NOT_CAPABLE -> {
-                        PermissionCard(
-                            title = stringResource(R.string.bluetooth_not_supported_title),
-                            description = stringResource(R.string.bluetooth_not_supported_description),
-                            buttonText = stringResource(R.string.bluetooth_not_supported_btn_text),
-                            onButtonClick = onBack,
-                            showPrimaryButton = false,
-                            secondaryText = stringResource(R.string.bluetooth_not_supported_go_back),
-                            onSecondaryClick = {}
-                        )
-                    }
+                BluetoothPermissionStatus.DEVICE_NOT_CAPABLE -> {
+                    showHome = false
+                    PermissionCard(
+                        title = stringResource(R.string.bluetooth_not_supported_title),
+                        description = stringResource(R.string.bluetooth_not_supported_description),
+                        buttonText = stringResource(R.string.bluetooth_not_supported_btn_text),
+                        onButtonClick = onBack,
+                        showPrimaryButton = false,
+                        secondaryText = stringResource(R.string.bluetooth_not_supported_go_back),
+                        onSecondaryClick = {}
+                    )
+                }
 
-                    BluetoothPermissionStatus.IN_PROGRESS -> {
-                        CircularProgressIndicator(
-                            strokeWidth = 3.dp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                BluetoothPermissionStatus.IN_PROGRESS -> {
+                    showHome = false
+                    CircularProgressIndicator(
+                        strokeWidth = 3.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
 
-                    else -> {
-                        content()
-                    }
+                else -> {
+                    showHome = true
                 }
             }
         }
     }
+    if(showHome) {
+        content()
+    }
+
 }
 
 
@@ -252,12 +253,13 @@ fun PermissionNotPermittedDialogPreview(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 fun PermissionCardPreview() {
-    BlueBytesTheme {
+    BlueBytesTheme{
         PermissionCard(
             title = "This is a title",
             description = "THis is a description",
             buttonText = "press me",
             onButtonClick = {},
+            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
         )
     }
 }

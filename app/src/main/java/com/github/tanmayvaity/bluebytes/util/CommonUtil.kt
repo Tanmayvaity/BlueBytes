@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 
@@ -23,4 +24,8 @@ fun Context.navigateToPermissionSettings(){
     intent.data = uri
     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
     this.startActivity(intent)
+}
+
+fun Context.hasPermission(permission: String): Boolean {
+    return this.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
 }
