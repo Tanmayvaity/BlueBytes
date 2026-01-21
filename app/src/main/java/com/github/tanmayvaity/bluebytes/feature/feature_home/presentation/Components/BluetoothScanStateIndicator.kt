@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -61,6 +62,13 @@ fun ScanStateIndicator(
                         LoadState.LOADING -> stringResource(R.string.scanning)
                         LoadState.LOADING_STOPPED -> stringResource(R.string.scanning_has_stopped)
                     },
+                    modifier = Modifier.testTag(
+                        when (state) {
+                            LoadState.NOT_STARTED -> stringResource(R.string.scanning_not_started)
+                            LoadState.LOADING -> stringResource(R.string.scanning)
+                            LoadState.LOADING_STOPPED -> stringResource(R.string.scanning_has_stopped)
+                        }
+                    ),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center

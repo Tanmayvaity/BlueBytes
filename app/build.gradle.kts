@@ -83,6 +83,10 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
 
+    //mockk
+    testImplementation(libs.io.mockk)
+    testImplementation(libs.kotlin.coroutines.test)
+
 }
 
 

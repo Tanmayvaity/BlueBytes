@@ -20,6 +20,11 @@ kspVersion = "2.3.4"
 hilt-navigation = "1.2.0"
 hiltVersion = "2.57.1"
 
+
+mockkVersion = "1.14.7"
+coroutines = "1.10.2"
+
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -46,6 +51,10 @@ androidx-material3-adaptive-navigation3 = { group = "androidx.compose.material3.
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltVersion" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltVersion" }
 hilt-navigation-compose = {module = "androidx.hilt:hilt-navigation-compose",version.ref = "hilt-navigation"}
+kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+
+
+io-mockk = { module = "io.mockk:mockk", version.ref = "mockkVersion" }
 
 
 [plugins]

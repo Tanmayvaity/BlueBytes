@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -96,7 +97,8 @@ fun PermissionScreen(
                         onButtonClick = onGrantClick,
                         showPrimaryButton = true,
                         secondaryText = stringResource(R.string.bluetooth_permission_denied_privacy),
-                        onSecondaryClick = {}
+                        onSecondaryClick = {},
+                        modifier = Modifier.testTag("Permission not permitted")
                     )
                 }
 
@@ -109,7 +111,8 @@ fun PermissionScreen(
                         onButtonClick = onGoToSettings,
                         showPrimaryButton = true,
                         secondaryText = stringResource(R.string.bluetooth_turned_learn_more),
-                        onSecondaryClick = {}
+                        onSecondaryClick = {},
+                        modifier = Modifier.testTag("Bluetooth turned off")
                     )
                 }
 

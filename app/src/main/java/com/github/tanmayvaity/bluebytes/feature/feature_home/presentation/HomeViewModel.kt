@@ -36,13 +36,19 @@ class HomeViewModel @Inject constructor(
 //            _state.update { it.copy(isLoading = LoadState.LOADING) }
         }
         .onEach { devices ->
-            Log.d(TAG, "paired Devices : ${devices}")
-            val unKnownDevices = devices.filter { it.name == null }
-            val pairedKnownDevices = devices.filter { it.name != null }
+//            Log.d(TAG, "paired Devices : ${devices}")
+//            Log.d(TAG, "paired Devices : $devices")
+
+            // Deduplicate by address within the emission itself
+            val uniqueDevices = devices.distinctBy { it.address }
+
+            val unknownDevices = uniqueDevices.filter { it.name == null }
+            val knownDevices = uniqueDevices.filter { it.name != null }
+
             _state.update {
                 it.copy(
-                    unKnownDevices = unKnownDevices,
-                    pairedKnownDevices = pairedKnownDevices
+                    unKnownDevices = unknownDevices,
+                    pairedKnownDevices = knownDevices
                 )
             }
         }
@@ -76,8 +82,9 @@ class HomeViewModel @Inject constructor(
 
             HomeEvents.StopScanning -> {
                 viewModelScope.launch {
-                    bluetoothManagerService.cancelDiscovery()
+
                     if(state.value.isLoading == LoadState.LOADING){
+                        bluetoothManagerService.cancelDiscovery()
                         _state.update { it.copy(isLoading = LoadState.LOADING_STOPPED) }
                         delay(1000)
                         _state.update { it.copy(isLoading = LoadState.NOT_STARTED) }

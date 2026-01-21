@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -31,7 +32,7 @@ import com.github.tanmayvaity.bluebytes.ui.theme.BlueBytesTheme
 @Composable
 fun EmptyDevicesPlaceholder(
     modifier: Modifier = Modifier,
-    message: String = "No devices nearby",
+    message: String = stringResource(R.string.no_devices_nearby),
     @DrawableRes iconRes: Int = R.drawable.ic_no,
     strokeColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.5f),
     strokeWidth: Dp = 1.dp,
