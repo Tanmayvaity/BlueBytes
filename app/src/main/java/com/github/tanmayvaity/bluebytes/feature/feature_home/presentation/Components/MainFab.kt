@@ -16,8 +16,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,7 +39,9 @@ import com.github.tanmayvaity.bluebytes.R
 import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.HomeEvents
 import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.LoadState
 import com.github.tanmayvaity.bluebytes.ui.theme.BlueBytesTheme
+import kotlin.math.exp
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MainFab(
     modifier: Modifier = Modifier,

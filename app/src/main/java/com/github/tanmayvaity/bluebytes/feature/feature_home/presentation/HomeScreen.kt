@@ -1,17 +1,24 @@
 package com.github.tanmayvaity.bluebytes.feature.feature_home.presentation
 
 import android.app.Activity
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -19,7 +26,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,10 +36,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -50,6 +61,7 @@ import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Compon
 import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components.ScanStateIndicator
 import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components.SectionTitle
 
+private const val TAG = "HomeScreen"
 
 @Composable
 fun HomeRoot(
@@ -100,7 +112,7 @@ fun HomeRoot(
         }
     }
 
-    if(permissionStatus != BluetoothPermissionStatus.GRANTED){
+    if (permissionStatus != BluetoothPermissionStatus.GRANTED) {
         viewmodel.onEvent(HomeEvents.StopScanning)
     }
 
@@ -143,19 +155,27 @@ fun HomeScreen(
     state: HomeState = HomeState(),
     onEvent: (HomeEvents) -> Unit = {}
 ) {
-    val grey = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
     val fabIcon =
         if (state.isLoading == LoadState.NOT_STARTED || state.isLoading == LoadState.LOADING_STOPPED) Icons.Default.Search else Icons.Default.Close
     val fabText =
         if (state.isLoading == LoadState.NOT_STARTED || state.isLoading == LoadState.LOADING_STOPPED) "Start Scanning " else "Stop Scanning"
-
-    val stroke = Stroke(width = 2f,
-        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
-    )
+    val isDeviceDiscoverable = rememberDeviceDiscoverableState()
 
 //    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
 //        onEvent(HomeEvents.StopScanning)
 //    }
+
+
+    val discoverLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            Log.d(TAG, "HomeScreen: device is discoverable")
+        }
+    }
+
+
+
 
     Scaffold(
         modifier = modifier
@@ -192,21 +212,51 @@ fun HomeScreen(
                 .consumeWindowInsets(innerPadding)
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
                 ScanStateIndicator(
                     loadState = state.isLoading
                 )
             }
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ){
+                    OutlinedButton(
+                        onClick = {
+                            Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+                                discoverLauncher.launch(this)
+                            }
+                        },
+                        enabled = !isDeviceDiscoverable
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_discover),
+                                contentDescription = "Discover Icon",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if(isDeviceDiscoverable) "Device is in discoverable state" else "Make device discoverable"
+                            )
+                        }
+                    }
+                }
 
-            if(state.pairedKnownDevices.isNotEmpty()){
+            }
+
+            if (state.pairedKnownDevices.isNotEmpty()) {
                 item {
                     SectionTitle(titleRes = R.string.known_devices)
                 }
             }
 
-            if(state.pairedKnownDevices.isNotEmpty()) {
+            if (state.pairedKnownDevices.isNotEmpty()) {
                 items(state.pairedKnownDevices) {
 
                     BluetoothDeviceCard(
@@ -217,19 +267,19 @@ fun HomeScreen(
                 }
             }
 
-            if(state.unKnownDevices.isEmpty() && state.pairedKnownDevices.isEmpty() && state.isLoading == LoadState.NOT_STARTED) {
+            if (state.unKnownDevices.isEmpty() && state.pairedKnownDevices.isEmpty() && state.isLoading == LoadState.NOT_STARTED) {
                 item {
                     EmptyDevicesPlaceholder()
                 }
             }
 
-            if(state.unKnownDevices.isNotEmpty()){
+            if (state.unKnownDevices.isNotEmpty()) {
                 item {
                     SectionTitle(titleRes = R.string.unknown_devices)
                 }
             }
 
-            if(state.unKnownDevices.isNotEmpty()) {
+            if (state.unKnownDevices.isNotEmpty()) {
                 items(state.unKnownDevices) {
 
                     BluetoothDeviceCard(

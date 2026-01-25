@@ -16,6 +16,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -54,6 +55,42 @@ fun rememberBluetoothEnabledState(): Boolean {
 
     return isEnabled
 }
+
+@Composable
+fun rememberDeviceDiscoverableState() : Boolean {
+
+    val context = LocalContext.current
+
+    var isDeviceDiscoverable by rememberSaveable { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        val receiver = object : BroadcastReceiver(){
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if(intent?.action == BluetoothAdapter.ACTION_SCAN_MODE_CHANGED){
+                    isDeviceDiscoverable =
+                        when(intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR)){
+                            BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> true
+                            else -> false
+
+                        }
+
+                }
+
+            }
+
+        }
+        context.registerReceiver(receiver, IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED))
+
+        onDispose {
+            context.unregisterReceiver(receiver)
+        }
+    }
+
+
+    return isDeviceDiscoverable
+}
+
+
 
 fun hasBluetoothPermissions(context: Context): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true

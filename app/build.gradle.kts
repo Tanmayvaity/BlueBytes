@@ -87,6 +87,10 @@ dependencies {
     testImplementation(libs.io.mockk)
     testImplementation(libs.kotlin.coroutines.test)
 
+    //material3-expressive
+    implementation(libs.androidx.material3.expressvie)
+    implementation(libs.androidx.material3.icons)
+
 }
 
 
