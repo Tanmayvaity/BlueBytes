@@ -2,6 +2,10 @@ package com.github.tanmayvaity.bluebytes.navigation
 
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.BottomAppBarScrollBehavior
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
@@ -15,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewDynamicColors
@@ -34,6 +39,7 @@ import com.github.tanmayvaity.bluebytes.feature.feature_settings.presentation.Se
 import com.github.tanmayvaity.bluebytes.ui.theme.BlueBytesTheme
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavigationRoot(
     modifier: Modifier = Modifier
@@ -41,16 +47,20 @@ fun NavigationRoot(
     val backStack = rememberNavBackStack(Route.Home)
     var selectedDestination by rememberSaveable { mutableStateOf(TopLevelScreen.HOME) }
     val topLevelNavigation = remember(backStack) { TopLevelNavigation(backStack) }
+    val scrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+    val nestedScrollState = scrollBehavior.nestedScrollConnection
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier
+            .nestedScroll(nestedScrollState),
         bottomBar = {
             BottomNavigationBar(
                 selectedDestination = selectedDestination,
                 onDestinationSelected = {screen ->
                     selectedDestination = screen
                     topLevelNavigation.navigateTo(screen.route)
-                }
+                },
+                scrollBehavior = scrollBehavior
             )
         }
     ) { innerPadding ->
@@ -104,12 +114,17 @@ fun NavigationRoot(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomNavigationBar(
     selectedDestination: TopLevelScreen,
-    onDestinationSelected: (TopLevelScreen) -> Unit
+    onDestinationSelected: (TopLevelScreen) -> Unit,
+    scrollBehavior: BottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
 ) {
-    NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
+    BottomAppBar(
+        windowInsets = NavigationBarDefaults.windowInsets,
+        scrollBehavior = scrollBehavior
+    ) {
         TopLevelScreen.entries.forEach { screen ->
             NavigationBarItem(
                 selected = selectedDestination == screen,
@@ -128,6 +143,7 @@ private fun BottomNavigationBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @PreviewLightDark
 @Composable
