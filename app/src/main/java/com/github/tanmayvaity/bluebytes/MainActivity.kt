@@ -4,14 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.tanmayvaity.bluebytes.feature.feature_settings.presentation.SettingsViewModel
 import com.github.tanmayvaity.bluebytes.navigation.NavigationRoot
 import com.github.tanmayvaity.bluebytes.ui.theme.BlueBytesTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,7 +24,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            BlueBytesTheme {
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
+            val darkModePref by settingsViewModel.isDarkMode.collectAsStateWithLifecycle()
+            val darkTheme = darkModePref ?: isSystemInDarkTheme()
+            BlueBytesTheme(darkTheme = darkTheme) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavigationRoot(
                         modifier = Modifier
