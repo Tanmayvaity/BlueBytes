@@ -67,6 +67,7 @@ private const val TAG = "HomeScreen"
 fun HomeRoot(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
+    onOpenConnection: () -> Unit = {},
     viewmodel: HomeViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -126,7 +127,8 @@ fun HomeRoot(
         val state by viewmodel.state.collectAsStateWithLifecycle()
         HomeScreen(
             state = state,
-            onEvent = viewmodel::onEvent
+            onEvent = viewmodel::onEvent,
+            onOpenConnection = onOpenConnection
         )
     }
 }
@@ -153,7 +155,8 @@ private fun resolvePermissionStatus(
 fun HomeScreen(
     modifier: Modifier = Modifier,
     state: HomeState = HomeState(),
-    onEvent: (HomeEvents) -> Unit = {}
+    onEvent: (HomeEvents) -> Unit = {},
+    onOpenConnection: () -> Unit = {}
 ) {
     val fabIcon =
         if (state.isLoading == LoadState.NOT_STARTED || state.isLoading == LoadState.LOADING_STOPPED) Icons.Default.Search else Icons.Default.Close
@@ -300,6 +303,7 @@ fun HomeScreen(
                             ?: stringResource(R.string.unknown_device),
                         macAddress = connection.device.address,
                         isConnected = true,
+                        onOpenChatClick = onOpenConnection,
                         onDisconnectClick = { onEvent(HomeEvents.Disconnect) }
                     )
                 }

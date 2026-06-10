@@ -11,19 +11,25 @@ import android.os.Build
 import android.util.Log
 import com.github.tanmayvaity.bluebytes.core.data.mapper.toBluetoothDeviceInfo
 import com.github.tanmayvaity.bluebytes.core.domain.model.BluetoothDeviceInfo
+import com.github.tanmayvaity.bluebytes.core.domain.model.BluetoothMessage
 import com.github.tanmayvaity.bluebytes.core.domain.model.ConnectionState
 import com.github.tanmayvaity.bluebytes.core.domain.repository.BluetoothManagerService
 import com.github.tanmayvaity.bluebytes.util.hasPermission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
@@ -167,6 +173,43 @@ class BluetoothManagerServiceImpl @Inject constructor(
         clientSocket = null
         clientJob?.cancel()
         _connectionState.update { ConnectionState.Idle }
+    }
+
+    override fun listenForIncomingMessages(): Flow<BluetoothMessage> {
+        val socket = clientSocket ?: return emptyFlow()
+        return flow {
+            val buffer = ByteArray(1024)
+            while (currentCoroutineContext().isActive) {
+                val byteCount = try {
+                    socket.inputStream.read(buffer)
+                } catch (e: IOException) {
+                    // Remote side closed or the link dropped.
+                    Log.d(TAG, "listenForIncomingMessages: connection lost - ${e.message}")
+                    _connectionState.update { ConnectionState.Idle }
+                    break
+                }
+                if (byteCount <= 0) break
+                emit(
+                    BluetoothMessage(
+                        message = String(buffer, 0, byteCount),
+                        isFromLocalUser = false
+                    )
+                )
+            }
+        }.flowOn(Dispatchers.IO)
+    }
+
+    override suspend fun sendMessage(message: String): BluetoothMessage? {
+        val socket = clientSocket ?: return null
+        return try {
+            withContext(Dispatchers.IO) {
+                socket.outputStream.write(message.toByteArray())
+            }
+            BluetoothMessage(message = message, isFromLocalUser = true)
+        } catch (e: IOException) {
+            Log.e(TAG, "sendMessage failed : ${e.message}")
+            null
+        }
     }
 
     private fun updatePairedDevices() {

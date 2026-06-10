@@ -33,6 +33,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.github.tanmayvaity.bluebytes.feature.feature_chat.presentation.ChatScreen
+import com.github.tanmayvaity.bluebytes.feature.feature_connection.presentation.ConnectionRoot
 import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.HomeRoot
 import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.HomeScreen
 import com.github.tanmayvaity.bluebytes.feature.feature_settings.presentation.SettingsScreen
@@ -54,14 +55,17 @@ fun NavigationRoot(
         modifier = modifier
             .nestedScroll(nestedScrollState),
         bottomBar = {
-            BottomNavigationBar(
-                selectedDestination = selectedDestination,
-                onDestinationSelected = {screen ->
-                    selectedDestination = screen
-                    topLevelNavigation.navigateTo(screen.route)
-                },
-                scrollBehavior = scrollBehavior
-            )
+            // Hide the bottom nav bar on the Connection screen so its text input isn't obscured.
+            if (backStack.lastOrNull() !is Route.Connection) {
+                BottomNavigationBar(
+                    selectedDestination = selectedDestination,
+                    onDestinationSelected = {screen ->
+                        selectedDestination = screen
+                        topLevelNavigation.navigateTo(screen.route)
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+            }
         }
     ) { innerPadding ->
 
@@ -84,8 +88,10 @@ fun NavigationRoot(
                             HomeRoot(
                                 onBack = {
                                     backStack.removeLastOrNull()
+                                },
+                                onOpenConnection = {
+                                    backStack.add(Route.Connection)
                                 }
-
                             )
                         }
                     }
@@ -104,6 +110,18 @@ fun NavigationRoot(
                             key = key
                         ){
                             SettingsScreen()
+                        }
+                    }
+
+                    is Route.Connection -> {
+                        NavEntry(
+                            key = key
+                        ) {
+                            ConnectionRoot(
+                                onBack = {
+                                    backStack.removeLastOrNull()
+                                }
+                            )
                         }
                     }
 

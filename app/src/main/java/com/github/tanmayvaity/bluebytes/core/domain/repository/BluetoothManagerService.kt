@@ -1,7 +1,9 @@
 package com.github.tanmayvaity.bluebytes.core.domain.repository
 
 import com.github.tanmayvaity.bluebytes.core.domain.model.BluetoothDeviceInfo
+import com.github.tanmayvaity.bluebytes.core.domain.model.BluetoothMessage
 import com.github.tanmayvaity.bluebytes.core.domain.model.ConnectionState
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface BluetoothManagerService {
@@ -16,4 +18,7 @@ interface BluetoothManagerService {
 
     fun initiateConnection(device : BluetoothDeviceInfo)
     fun stopConnection()
+
+    fun listenForIncomingMessages() : Flow<BluetoothMessage>
+    suspend fun sendMessage(message : String) : BluetoothMessage?
 }
