@@ -67,7 +67,7 @@ private const val TAG = "HomeScreen"
 fun HomeRoot(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
-    onOpenConnection: () -> Unit = {},
+    onOpenConnection: (address: String, name: String?) -> Unit = { _, _ -> },
     viewmodel: HomeViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -156,7 +156,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     state: HomeState = HomeState(),
     onEvent: (HomeEvents) -> Unit = {},
-    onOpenConnection: () -> Unit = {}
+    onOpenConnection: (address: String, name: String?) -> Unit = { _, _ -> }
 ) {
     val fabIcon =
         if (state.isLoading == LoadState.NOT_STARTED || state.isLoading == LoadState.LOADING_STOPPED) Icons.Default.Search else Icons.Default.Close
@@ -303,7 +303,9 @@ fun HomeScreen(
                             ?: stringResource(R.string.unknown_device),
                         macAddress = connection.device.address,
                         isConnected = true,
-                        onOpenChatClick = onOpenConnection,
+                        onOpenChatClick = {
+                            onOpenConnection(connection.device.address, connection.device.name)
+                        },
                         onDisconnectClick = { onEvent(HomeEvents.Disconnect) }
                     )
                 }

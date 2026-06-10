@@ -91,6 +91,10 @@ dependencies {
     implementation(libs.androidx.material3.expressvie)
     implementation(libs.androidx.material3.icons)
 
+    // room
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
 }
 
 

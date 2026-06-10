@@ -89,8 +89,8 @@ fun NavigationRoot(
                                 onBack = {
                                     backStack.removeLastOrNull()
                                 },
-                                onOpenConnection = {
-                                    backStack.add(Route.Connection)
+                                onOpenConnection = { address, name ->
+                                    backStack.add(Route.Connection(address, name))
                                 }
                             )
                         }
@@ -100,7 +100,11 @@ fun NavigationRoot(
                         NavEntry(
                             key = key,
                         ) {
-                            ChatScreen()
+                            ChatScreen(
+                                onOpenConversation = { address, name ->
+                                    backStack.add(Route.Connection(address, name))
+                                }
+                            )
                         }
 
                     }
@@ -118,6 +122,8 @@ fun NavigationRoot(
                             key = key
                         ) {
                             ConnectionRoot(
+                                address = key.address,
+                                name = key.name,
                                 onBack = {
                                     backStack.removeLastOrNull()
                                 }

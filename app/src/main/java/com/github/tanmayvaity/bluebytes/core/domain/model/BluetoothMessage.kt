@@ -2,5 +2,6 @@ package com.github.tanmayvaity.bluebytes.core.domain.model
 
 data class BluetoothMessage(
     val message: String,
-    val isFromLocalUser: Boolean
+    val isFromLocalUser: Boolean,
+    val timestamp: Long = System.currentTimeMillis()
 )

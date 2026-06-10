@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,16 +46,23 @@ import com.github.tanmayvaity.bluebytes.core.domain.model.ConnectionState
 
 @Composable
 fun ConnectionRoot(
+    address: String,
+    name: String?,
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
     viewModel: ConnectionViewModel = hiltViewModel()
 ) {
+    LaunchedEffect(address) {
+        viewModel.setConversation(address, name)
+    }
     val state by viewModel.state.collectAsStateWithLifecycle()
     ConnectionScreen(
         modifier = modifier,
         state = state,
+        fallbackName = name ?: address,
         onBack = onBack,
         onSend = viewModel::sendMessage,
+        onReconnect = viewModel::reconnect,
         onCloseConnection = viewModel::closeConnection
     )
 }
@@ -62,12 +72,15 @@ fun ConnectionRoot(
 fun ConnectionScreen(
     modifier: Modifier = Modifier,
     state: ConnectionScreenState = ConnectionScreenState(),
+    fallbackName: String = "Connection",
     onBack: () -> Unit = {},
     onSend: (String) -> Unit = {},
+    onReconnect: () -> Unit = {},
     onCloseConnection: () -> Unit = {}
 ) {
     val connection = state.connectionState
     val isConnected = connection is ConnectionState.Connected
+    val isConnecting = connection is ConnectionState.Connecting
 
     // Remember the peer name so the title survives the transition to a closed state.
     var deviceName by rememberSaveable { mutableStateOf<String?>(null) }
@@ -81,7 +94,7 @@ fun ConnectionScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(text = deviceName ?: "Connection") },
+                title = { Text(text = deviceName ?: fallbackName) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -104,8 +117,8 @@ fun ConnectionScreen(
             )
         },
         bottomBar = {
-            if (isConnected) {
-                MessageInputBar(
+            when {
+                isConnected -> MessageInputBar(
                     value = input,
                     onValueChange = { input = it },
                     onSend = {
@@ -113,16 +126,18 @@ fun ConnectionScreen(
                         input = ""
                     }
                 )
-            } else {
-                Text(
-                    text = "Connection closed",
-                    color = MaterialTheme.colorScheme.error,
+
+                isConnecting -> Text(
+                    text = "Connecting…",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        .padding(16.dp)
                 )
+
+                else -> DisconnectedBar(onReconnect = onReconnect)
             }
         }
     ) { innerPadding ->
@@ -167,6 +182,30 @@ private fun MessageBubble(
                 color = textColor,
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun DisconnectedBar(
+    onReconnect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .imePadding()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Not connected",
+            color = MaterialTheme.colorScheme.error,
+            fontWeight = FontWeight.Medium
+        )
+        Button(onClick = onReconnect) {
+            Text(text = "Reconnect")
         }
     }
 }

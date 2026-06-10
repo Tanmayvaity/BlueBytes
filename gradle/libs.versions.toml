@@ -26,6 +26,8 @@ coroutines = "1.10.2"
 
 material-expressive = "1.5.0-alpha10"
 
+room = "2.8.4"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -59,6 +61,10 @@ androidx-material3-expressvie = {group = "androidx.compose.material3",name = "ma
 androidx-material3-icons = {module = "androidx.compose.material:material-icons-core",version.ref = "material-expressive"}
 
 io-mockk = { module = "io.mockk:mockk", version.ref = "mockkVersion" }
+
+androidx-room-runtime = {module = "androidx.room:room-runtime",version.ref = "room"}
+androidx-room-compiler = {module = "androidx.room:room-compiler",version.ref = "room"}
+androidx-room-ktx = {module = "androidx.room:room-ktx",version.ref = "room"}
 
 
 [plugins]

@@ -41,7 +41,10 @@ sealed class Route {
     data object Settings : NavKey, Route()
 
     @Serializable
-    data object Connection : NavKey, Route()
+    data class Connection(
+        val address: String,
+        val name: String? = null
+    ) : NavKey, Route()
 }
 
 
