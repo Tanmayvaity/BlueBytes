@@ -1,4 +1,4 @@
-package com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components
+package com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.components
 
 import androidx.annotation.StringRes
 import androidx.compose.material3.MaterialTheme

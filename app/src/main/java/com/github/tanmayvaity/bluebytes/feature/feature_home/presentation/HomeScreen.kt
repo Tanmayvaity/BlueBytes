@@ -38,8 +38,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -51,15 +49,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.tanmayvaity.bluebytes.core.domain.model.BluetoothDeviceInfo
-import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components.PermissionScreen
+import com.github.tanmayvaity.bluebytes.core.domain.model.ConnectionState
+import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.components.PermissionScreen
 import com.github.tanmayvaity.bluebytes.ui.theme.BlueBytesTheme
 import com.github.tanmayvaity.bluebytes.util.navigateToPermissionSettings
 import com.github.tanmayvaity.bluebytes.R
-import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components.BluetoothDeviceCard
-import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components.EmptyDevicesPlaceholder
-import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components.MainFab
-import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components.ScanStateIndicator
-import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components.SectionTitle
+import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.components.BluetoothDeviceCard
+import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.components.EmptyDevicesPlaceholder
+import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.components.MainFab
+import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.components.PairedDeviceCard
+import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.components.ScanStateIndicator
+import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.components.SectionTitle
 
 private const val TAG = "HomeScreen"
 
@@ -169,8 +169,17 @@ fun HomeScreen(
     val discoverLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            Log.d(TAG, "HomeScreen: device is discoverable")
+//        if (result.resultCode == Activity.RESULT_OK) {
+//            Log.d(TAG, "HomeScreen: device is discoverable")
+//            val intent = result.data
+//            val requestcode = intent?.getStringExtra("requestcode")
+//            Log.d(TAG, "HomeScreen: ${requestcode.toString()}")
+//        }
+        if(result.resultCode > 0){
+            Log.d(
+                TAG,
+                "HomeScreen: user allowed discoverability for ${result.resultCode} seconds"
+            )
         }
     }
 
@@ -222,31 +231,78 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
-                ){
-                    OutlinedButton(
-                        onClick = {
-                            Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-                                discoverLauncher.launch(this)
-                            }
-                        },
-                        enabled = !isDeviceDiscoverable
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                        OutlinedButton(
+                            onClick = {
+                                Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+                                    discoverLauncher.launch(this)
+                                }
+                            },
+                            enabled = !isDeviceDiscoverable,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_discover),
-                                contentDescription = "Discover Icon",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if(isDeviceDiscoverable) "Device is in discoverable state" else "Make device discoverable"
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_discover),
+                                    contentDescription = "Discover Icon",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Discoverable"
+                                )
+                            }
+                        }
+                        val isListening = state.connectionState is ConnectionState.Listening
+                        OutlinedButton(
+                            onClick = {
+                                if (isListening) {
+                                    onEvent(HomeEvents.StopServer)
+                                } else {
+                                    onEvent(HomeEvents.StartServer)
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_server),
+                                    contentDescription = if (isListening) "Stop Server" else "Start Server",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (isListening) "Stop Server" else "Start Server"
+                                )
+                            }
                         }
                     }
                 }
 
+            }
+
+            val connection = state.connectionState
+            if (connection is ConnectionState.Connected) {
+                item {
+                    SectionTitle(titleRes = R.string.active_device)
+                }
+                item {
+                    PairedDeviceCard(
+                        deviceName = connection.device.name
+                            ?: stringResource(R.string.unknown_device),
+                        macAddress = connection.device.address,
+                        isConnected = true,
+                        onDisconnectClick = { onEvent(HomeEvents.Disconnect) }
+                    )
+                }
             }
 
             if (state.pairedKnownDevices.isNotEmpty()) {
@@ -261,7 +317,7 @@ fun HomeScreen(
                     BluetoothDeviceCard(
                         deviceName = it.name ?: stringResource(R.string.unknown_device),
                         deviceAddress = it.address,
-                        onConnectClick = {}
+                        onConnectClick = { onEvent(HomeEvents.ConnectToDevice(it)) }
                     )
                 }
             }
@@ -284,7 +340,7 @@ fun HomeScreen(
                     BluetoothDeviceCard(
                         deviceName = it.name ?: stringResource(R.string.unknown_device),
                         deviceAddress = it.address,
-                        onConnectClick = {}
+                        onConnectClick = { onEvent(HomeEvents.ConnectToDevice(it)) }
                     )
                 }
             }

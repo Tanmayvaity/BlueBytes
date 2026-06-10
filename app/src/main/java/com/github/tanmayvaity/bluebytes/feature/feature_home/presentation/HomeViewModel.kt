@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.tanmayvaity.bluebytes.core.domain.model.BluetoothDeviceInfo
+import com.github.tanmayvaity.bluebytes.core.domain.model.ConnectionState
 import com.github.tanmayvaity.bluebytes.core.domain.repository.BluetoothManagerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -57,6 +58,13 @@ class HomeViewModel @Inject constructor(
         }
         .launchIn(viewModelScope)
 
+    private val connectionState = bluetoothManagerService
+        .connectionState
+        .onEach { connection ->
+            _state.update { it.copy(connectionState = connection) }
+        }
+        .launchIn(viewModelScope)
+
 //    init {
 //        viewModelScope.launch {
 //            delay(15000)
@@ -94,7 +102,21 @@ class HomeViewModel @Inject constructor(
                 }
             }
 
+            HomeEvents.StartServer -> {
+                bluetoothManagerService.startServer()
+            }
 
+            HomeEvents.StopServer -> {
+                bluetoothManagerService.stopServer()
+            }
+
+            is HomeEvents.ConnectToDevice -> {
+                bluetoothManagerService.initiateConnection(event.device)
+            }
+
+            HomeEvents.Disconnect -> {
+                bluetoothManagerService.stopConnection()
+            }
         }
     }
 }
@@ -103,7 +125,8 @@ class HomeViewModel @Inject constructor(
 data class HomeState(
     val isLoading: LoadState = LoadState.NOT_STARTED,
     val unKnownDevices : List<BluetoothDeviceInfo> = emptyList(),
-    val pairedKnownDevices : List<BluetoothDeviceInfo> = emptyList()
+    val pairedKnownDevices : List<BluetoothDeviceInfo> = emptyList(),
+    val connectionState : ConnectionState = ConnectionState.Idle
 )
 
 enum class LoadState {

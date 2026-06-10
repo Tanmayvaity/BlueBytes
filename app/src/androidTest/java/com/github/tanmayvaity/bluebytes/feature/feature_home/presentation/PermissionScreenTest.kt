@@ -4,12 +4,11 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.Components.PermissionScreen
+import com.github.tanmayvaity.bluebytes.feature.feature_home.presentation.components.PermissionScreen
 import com.github.tanmayvaity.bluebytes.ui.theme.BlueBytesTheme
 import org.junit.Rule
 import org.junit.Test
 
-// src/androidTest/java/.../PermissionScreenTest.kt
 
 class PermissionScreenTest {
 

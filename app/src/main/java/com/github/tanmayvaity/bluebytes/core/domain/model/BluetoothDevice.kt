@@ -6,3 +6,4 @@ data class BluetoothDevice(
     val address : String,
     val name : String?
 )
+

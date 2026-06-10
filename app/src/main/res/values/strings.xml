@@ -28,6 +28,7 @@
     <string name="scanning_has_stopped">Scanning has stopped</string>
     <string name="connect">Connect</string>
     <string name="no_devices_nearby">No devices nearby</string>
+    <string name="active_device">Active Link</string>
 
 
 </resources>
